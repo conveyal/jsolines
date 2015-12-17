@@ -1,0 +1,19 @@
+{
+  "name": "jsoline",
+  "version": "0.0.1",
+  "description": "Compute isolines from regular grids in Javascript.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/conveyal/jsoline.git"
+  },
+  "author": "Matthew Wigginton Conway <mconway@conveyal.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/conveyal/jsoline/issues"
+  },
+  "homepage": "https://github.com/conveyal/jsoline#readme"
+}
