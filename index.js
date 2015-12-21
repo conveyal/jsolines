@@ -204,18 +204,21 @@ export default function computeIsoline ({surface, width, height, cutoff, project
 
   // shell game time.
   // sort out shells and holes
-  HOLES: for (let hole of holes) {
+  for (let hole of holes) {
+    let foundFittingShellForHole = false
     for (let shell of shells) {
       // NB this is checking whether the first coordinate of the hole is inside the shell.
       // This is sufficient as shells don't overlap, and holes are guaranteed to be completely
       // contained by a single shell.
       if (inside(point(hole.coordinates[0][0]), shell)) {
         shell.coordinates.push(hole.coordinates)
-        continue HOLES
+        foundFittingShellForHole = true
       }
     }
 
-    console.log('Did not find fitting shell for hole')
+    if (!foundFittingShellForHole) {
+      console.log('Did not find fitting shell for hole')
+    }
   }
 
   return {
