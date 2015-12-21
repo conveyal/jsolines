@@ -72,19 +72,21 @@ export default function computeIsoline ({surface, width, height, cutoff, project
 
       let coords = []
 
-      RING: while (true) {
+      while (true) {
         let startx = x
         let starty = y
         idx = contour[y * cWidth + x]
+
+        if (idx === 0 || idx === 15) {
+          console.log('Ran off outside of ring')
+          break
+        }
 
         // only mark as found if it's not a saddle because we expect to reach saddles twice.
         if (idx !== 5 && idx !== 10) found[y * cWidth + x] = 1
 
         // follow the loop
         switch (idx) {
-          case 0:
-            console.log('Ran off outside of ring')
-            break RING
           case 1:
             x--
             break
@@ -147,9 +149,6 @@ export default function computeIsoline ({surface, width, height, cutoff, project
           case 14:
             y++
             break
-          case 15:
-            console.log('Ran off inside of ring')
-            break RING
         }
 
         // keep track of winding direction
@@ -185,7 +184,7 @@ export default function computeIsoline ({surface, width, height, cutoff, project
         // we're back at the start of the ring
         if (x === origx && y === origy) {
           coords.push(coords[0]) // close the ring
-          break RING
+          break
         }
 
         // make it a fully-fledged GeoJSON object
