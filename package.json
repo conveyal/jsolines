@@ -1,9 +1,20 @@
 {
   "name": "jsolines",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Compute isolines from regular grids in Javascript.",
-  "main": "index.js",
+  "main": "./build/index.js",
+  "babel": {
+    "presets": [
+      "es2015",
+      "stage-0",
+      "react"
+    ]
+  },
+  "browserify": {
+    "transform": "babelify"
+  },
   "scripts": {
+    "build": "  browserify index.js > build/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,5 +29,13 @@
   "homepage": "https://github.com/conveyal/jsolinse#readme",
   "dependencies": {
     "turf-inside": "^1.1.4"
+  },
+  "devDependencies": {
+    "babel": "^6.3.26",
+    "babel-cli": "^6.3.17",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-stage-0": "^6.3.13",
+    "babelify": "^7.2.0",
+    "browserify": "^12.0.1"
   }
 }
