@@ -6,8 +6,7 @@
   "babel": {
     "presets": [
       "es2015",
-      "stage-0",
-      "react"
+      "stage-0"
     ]
   },
   "browserify": {
@@ -28,7 +27,8 @@
   },
   "homepage": "https://github.com/conveyal/jsolinse#readme",
   "dependencies": {
-    "turf-inside": "^1.1.4"
+    "turf-inside": "^1.1.4",
+    "turf-point": "^2.0.1"
   },
   "devDependencies": {
     "babel": "^6.3.26",
