@@ -72,19 +72,21 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
 
       let coords = []
 
-      RING: while (true) {
+      while (true) {
         let startx = x
         let starty = y
         idx = contour[y * cWidth + x]
+
+        if (idx === 0 || idx === 15) {
+          console.log('Ran off outside of ring')
+          break
+        }
 
         // only mark as found if it's not a saddle because we expect to reach saddles twice.
         if (idx !== 5 && idx !== 10) found[y * cWidth + x] = 1
 
         // follow the loop
         switch (idx) {
-          case 0:
-            console.log('Ran off outside of ring')
-            break RING
           case 1:
             x--
             break
@@ -147,9 +149,6 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
           case 14:
             y++
             break
-          case 15:
-            console.log('Ran off inside of ring')
-            break RING
         }
 
         // keep track of winding direction
@@ -185,7 +184,7 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
         // we're back at the start of the ring
         if (x === origx && y === origy) {
           coords.push(coords[0]) // close the ring
-          break RING
+          break
         }
 
         // make it a fully-fledged GeoJSON object
@@ -205,19 +204,19 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
 
   // shell game time.
   // sort out shells and holes
-  HOLES: for (let hole of holes) {
-    for (let shell of shells) {
-      // NB this is checking whether the first coordinate of the hole is inside the shell.
-      // This is sufficient as shells don't overlap, and holes are guaranteed to be completely
-      // contained by a single shell.
-      if (inside(point(hole.coordinates[0][0]), shell)) {
-        shell.coordinates.push(hole.coordinates)
-        continue HOLES
-      }
-    }
+  holes.forEach(hole => {
+    const holePoint = point(hole.coordinates[0][0])
+    // NB this is checking whether the first coordinate of the hole is inside the shell.
+    // This is sufficient as shells don't overlap, and holes are guaranteed to be completely
+    // contained by a single shell.
+    const containingShell = shells.find(shell => inside(holePoint, shell))
 
-    console.log('Did not find fitting shell for hole')
-  }
+    if (containingShell) {
+      containingShell.coordinates.push(hole.coordinates)
+    } else {
+      console.log('Did not find fitting shell for hole')
+    }
+  })
 
   return {
     type: 'MultiPolygon',
