@@ -9,7 +9,7 @@ import inside from 'turf-inside'
 import point from 'turf-point'
 
 /** Create a JSON isoline. Surface is a (possibly typed) array, width and height are its width and height, and cutoff is the cutoff */
-export default function computeIsoline ({surface, width, height, cutoff, project}) {
+export default function jsolines ({surface, width, height, cutoff, project}) {
   // first, create the contour grid
   let contour = new Uint8Array((width - 1) * (height - 1))
 
@@ -196,7 +196,7 @@ export default function computeIsoline ({surface, width, height, cutoff, project
 
         // check winding direction
         // positive means counter clockwise, see http://stackoverflow.com/questions/1165647
-        // NB +y is down so the signs are reverse from what would normally be expected
+        // NB +y is down so the signs are reversed from what would normally be expected
         if (direction > 0) shells.add(geom)
         else holes.add(geom)
       }
