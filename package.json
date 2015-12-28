@@ -25,7 +25,7 @@
   "bugs": {
     "url": "https://github.com/conveyal/jsolines/issues"
   },
-  "homepage": "https://github.com/conveyal/jsolinse#readme",
+  "homepage": "https://github.com/conveyal/jsolines#readme",
   "dependencies": {
     "turf-inside": "^1.1.4",
     "turf-point": "^2.0.1"
