@@ -13,7 +13,7 @@
     "transform": "babelify"
   },
   "scripts": {
-    "build": "  browserify index.js > build/index.js",
+    "prepublish": "babel index.js > build/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
