@@ -11,38 +11,14 @@ import point from 'turf-point'
 /** Create a JSON isoline. Surface is a (possibly typed) array, width and height are its width and height, and cutoff is the cutoff */
 export default function jsolines ({surface, width, height, cutoff, project}) {
   // first, create the contour grid
-  let contour = new Uint8Array((width - 1) * (height - 1))
-
-  // compute contour values for each cell
-  for (let x = 0; x < width - 1; x++) {
-    for (let y = 0; y < height - 1; y++) {
-      let topLeft = surface[y * width + x] < cutoff
-      let topRight = surface[y * width + x + 1] < cutoff
-      let botLeft = surface[(y + 1) * width + x] < cutoff
-      let botRight = surface[(y + 1) * width + x + 1] < cutoff
-
-      // if we're at the edge of the area, set the outer sides to false, so that isochrones always close
-      // even when they actually extend beyond the edges of the surface
-      if (x === 0) topLeft = botLeft = false
-      if (x === width - 2) topRight = botRight = false
-      if (y === 0) topLeft = topRight = false
-      if (y === height - 2) botRight = botLeft = false
-
-      let idx = 0
-
-      if (topLeft) idx |= 1 << 3
-      if (topRight) idx |= 1 << 2
-      if (botLeft) idx |= 1 << 1
-      if (botRight) idx |= 1
-
-      contour[y * (width - 1) + x] = idx
-    }
-  }
-
+  let contour = getContour({surface, width, height, cutoff})
   let cWidth = width - 1
 
   // javascript does not have boolean arrays. lame.
   let found = new Uint8Array((width - 1) * (height - 1))
+
+  // DEBUG, comment out to save memory
+  let indices = []
 
   // we'll sort out what shell goes with what hole in a bit
   let shells = []
@@ -52,20 +28,24 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
   // left. This lets us use winding direction to determine holes.
   for (let origy = 0; origy < height - 1; origy++) {
     for (let origx = 0; origx < width - 1; origx++) {
-      if (found[origy * cWidth + origx]) continue
+      if (found[origy * cWidth + origx] === 1) {
+        continue
+      }
 
       let idx = contour[origy * cWidth + origx]
       // continue if there is no line here or if it's a saddle, as we don't know which way the saddle goes
       if (idx === 0 || idx === 5 || idx === 10 || idx === 15) continue
 
       // huzzah! we have found a line, now follow it, keeping the filled area to our left,
-      // which allows us to use the winding direction to determing what should be a shell and
+      // which allows us to use the winding direction to determine what should be a shell and
       // what should be a hole
       let x = origx
       let y = origy
 
       let prevx = -1
       let prevy = -1
+      let startx = -1
+      let starty = -1
 
       // track winding direction
       let direction = 0
@@ -73,12 +53,26 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
       let coords = []
 
       RING: while (true) {
-        let startx = x
-        let starty = y
+        // make sure we're not traveling in circles
+        // NB using index from _previous_ cell, we have not yet set an index for this cell
+        if (found[y * cWidth + x] === 1) {
+          console.log(`Ring crosses other ring (or possibly self) at ${x}, ${y} coming from case ${idx}`)
+          console.log(`Last few indices: ${indices.slice(Math.max(0, indices.length - 10))}`)
+          break RING
+        }
+
+        prevx = startx
+        prevy = starty
+        startx = x
+        starty = y
         idx = contour[y * cWidth + x]
 
+        indices.push(idx)
+
         // only mark as found if it's not a saddle because we expect to reach saddles twice.
-        if (idx !== 5 && idx !== 10) found[y * cWidth + x] = 1
+        if (idx !== 5 && idx !== 10) {
+          found[y * cWidth + x] = 1
+        }
 
         // follow the loop
         switch (idx) {
@@ -178,27 +172,38 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
           // came from top
           let frac = (cutoff - topLeft) / (topRight - topLeft)
           coord = [x + frac, y + 1]
+        } else {
+          console.log(`Unexpected coordinate shift from ${startx}, ${starty} to ${x}, ${y}, discarding ring`)
+          break RING
         }
 
         coords.push(project(coord))
 
-        // we're back at the start of the ring
-        if (x === origx && y === origy) {
-          coords.push(coords[0]) // close the ring
+        if (coords.length > 10000) {
+          console.log('More than 10000 coordinates found in ring, skipping this ring')
           break RING
         }
 
-        // make it a fully-fledged GeoJSON object
-        let geom = {
-          type: 'Polygon',
-          coordinates: [coords]
-        }
+        // we're back at the start of the ring
+        if (x === origx && y === origy) {
+          coords.push(coords[0]) // close the ring
 
-        // check winding direction
-        // positive means counter clockwise, see http://stackoverflow.com/questions/1165647
-        // NB +y is down so the signs are reversed from what would normally be expected
-        if (direction > 0) shells.add(geom)
-        else holes.add(geom)
+          // make it a fully-fledged GeoJSON object
+          let geom = {
+            type: 'Feature',
+            geometry: {
+              type: 'Polygon',
+              coordinates: [coords]
+            }
+          }
+
+          // check winding direction
+          // positive means counter clockwise, see http://stackoverflow.com/questions/1165647
+          // NB +y is down so the signs are reversed from what would normally be expected
+          if (direction > 0) shells.push(geom)
+          else holes.push(geom)
+          break RING
+        }
       }
     }
   }
@@ -210,8 +215,8 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
       // NB this is checking whether the first coordinate of the hole is inside the shell.
       // This is sufficient as shells don't overlap, and holes are guaranteed to be completely
       // contained by a single shell.
-      if (inside(point(hole.coordinates[0][0]), shell)) {
-        shell.coordinates.push(hole.coordinates)
+      if (inside(point(hole.geometry.coordinates[0][0]), shell)) {
+        shell.geometry.coordinates.push(hole.geometry.coordinates[0])
         continue HOLES
       }
     }
@@ -220,7 +225,43 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
   }
 
   return {
-    type: 'MultiPolygon',
-    coordinates: shells.map(s => s.coordinates)
+    type: 'Feature',
+    geometry: {
+      type: 'MultiPolygon',
+      coordinates: shells.map(s => s.geometry.coordinates)
+    }
   }
+}
+
+/** Get a contouring grid. Exported for debug purposes, not generally used outside jsolines testing */
+export function getContour ({surface, width, height, cutoff}) {
+  let contour = new Uint8Array((width - 1) * (height - 1))
+
+  // compute contour values for each cell
+  for (let x = 0; x < width - 1; x++) {
+    for (let y = 0; y < height - 1; y++) {
+      let topLeft = surface[y * width + x] < cutoff
+      let topRight = surface[y * width + x + 1] < cutoff
+      let botLeft = surface[(y + 1) * width + x] < cutoff
+      let botRight = surface[(y + 1) * width + x + 1] < cutoff
+
+      // if we're at the edge of the area, set the outer sides to false, so that isochrones always close
+      // even when they actually extend beyond the edges of the surface
+      if (x === 0) topLeft = botLeft = false
+      if (x === width - 2) topRight = botRight = false
+      if (y === 0) topLeft = topRight = false
+      if (y === height - 2) botRight = botLeft = false
+
+      let idx = 0
+
+      if (topLeft) idx |= 1 << 3
+      if (topRight) idx |= 1 << 2
+      if (botRight) idx |= 1 << 1
+      if (botLeft) idx |= 1
+
+      contour[y * (width - 1) + x] = idx
+    }
+  }
+
+  return contour
 }
