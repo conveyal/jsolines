@@ -1,6 +1,6 @@
 {
   "name": "jsolines",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Compute isolines from regular grids in Javascript.",
   "main": "./build/index.js",
   "babel": {
