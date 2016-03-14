@@ -7,6 +7,9 @@
 
 import inside from 'turf-inside'
 import point from 'turf-point'
+import dbg from 'debug'
+
+const debug = dbg('jsolines')
 
 /** Create a JSON isoline. Surface is a (possibly typed) array, width and height are its width and height, and cutoff is the cutoff */
 export default function jsolines ({surface, width, height, cutoff, project}) {
@@ -159,18 +162,42 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
         if (startx < x) {
           // came from left
           let frac = (cutoff - topLeft) / (botLeft - topLeft)
+
+          if (frac === Infinity) {
+            debug(`segment fraction from left is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+            frac = 0.5
+          }
+
           coord = [x, y + frac]
         } else if (startx > x) {
           // came from right
           let frac = (cutoff - topRight) / (botRight - topRight)
+
+          if (frac === Infinity) {
+            debug(`segment fraction from right is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+            frac = 0.5
+          }
+
           coord = [x + 1, y + frac]
         } else if (starty > y) {
           // came from bottom
           let frac = (cutoff - botLeft) / (botRight - botLeft)
+
+          if (frac === Infinity) {
+            debug(`segment fraction from bottom is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+            frac = 0.5
+          }
+
           coord = [x + frac, y + 1]
         } else if (starty < y) {
           // came from top
           let frac = (cutoff - topLeft) / (topRight - topLeft)
+
+          if (frac === Infinity) {
+            debug(`segment fraction from top is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+            frac = 0.5
+          }
+
           coord = [x + frac, y + 1]
         } else {
           console.log(`Unexpected coordinate shift from ${startx}, ${starty} to ${x}, ${y}, discarding ring`)
