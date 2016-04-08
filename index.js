@@ -11,8 +11,11 @@ import dbg from 'debug'
 
 const debug = dbg('jsolines')
 
-/** Create a JSON isoline. Surface is a (possibly typed) array, width and height are its width and height, and cutoff is the cutoff */
-export default function jsolines ({surface, width, height, cutoff, project}) {
+/**
+ * Create a JSON isoline. Surface is a (possibly typed) array, width and height are its width and height, and cutoff is the cutoff.
+ * It is possible to disable linear interpolation for debug purposes by passing interpolation: false
+ */
+export default function jsolines ({surface, width, height, cutoff, project, interpolation = true}) {
   // first, create the contour grid
   let contour = getContour({surface, width, height, cutoff})
   let cWidth = width - 1
@@ -78,6 +81,8 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
         }
 
         // follow the loop
+        // we keep track of which contour cell we're in, and we always keep the filled area to our left.
+        // thus we always indicate only which direction we exit the cell.
         switch (idx) {
           case 0:
             console.log('Ran off outside of ring')
@@ -121,7 +126,7 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
           case 9:
             y--
             break
-          case 10:
+          case 10: // hex a
             if (prevx < x) {
               // came from left
               y++
@@ -132,19 +137,19 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
               console.log('Entered case 10 saddle point from wrong direction.')
             }
             break
-          case 11:
+          case 11: // b
             y--
             break
-          case 12:
+          case 12: // c
             x++
             break
-          case 13:
+          case 13: // d
             x++
             break
-          case 14:
+          case 14: // e
             y++
             break
-          case 15:
+          case 15: // f
             console.log('Ran off inside of ring')
             break RING
         }
@@ -161,7 +166,7 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
         let coord
         if (startx < x) {
           // came from left
-          let frac = (cutoff - topLeft) / (botLeft - topLeft)
+          let frac = interpolation ? (cutoff - topLeft) / (botLeft - topLeft) : 0.5
 
           if (frac === Infinity) {
             debug(`segment fraction from left is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
@@ -171,7 +176,7 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
           coord = [x, y + frac]
         } else if (startx > x) {
           // came from right
-          let frac = (cutoff - topRight) / (botRight - topRight)
+          let frac = interpolation ? (cutoff - topRight) / (botRight - topRight) : 0.5
 
           if (frac === Infinity) {
             debug(`segment fraction from right is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
@@ -181,7 +186,7 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
           coord = [x + 1, y + frac]
         } else if (starty > y) {
           // came from bottom
-          let frac = (cutoff - botLeft) / (botRight - botLeft)
+          let frac = interpolation ? (cutoff - botLeft) / (botRight - botLeft) : 0.5
 
           if (frac === Infinity) {
             debug(`segment fraction from bottom is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
@@ -191,14 +196,14 @@ export default function jsolines ({surface, width, height, cutoff, project}) {
           coord = [x + frac, y + 1]
         } else if (starty < y) {
           // came from top
-          let frac = (cutoff - topLeft) / (topRight - topLeft)
+          let frac = interpolation ? (cutoff - topLeft) / (topRight - topLeft) : 0.5
 
           if (frac === Infinity) {
             debug(`segment fraction from top is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
             frac = 0.5
           }
 
-          coord = [x + frac, y + 1]
+          coord = [x + frac, y]
         } else {
           console.log(`Unexpected coordinate shift from ${startx}, ${starty} to ${x}, ${y}, discarding ring`)
           break RING
