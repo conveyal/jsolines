@@ -58,13 +58,13 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
 
       let coords = []
 
-      RING: while (true) {
+      while (true) {
         // make sure we're not traveling in circles
         // NB using index from _previous_ cell, we have not yet set an index for this cell
         if (found[y * cWidth + x] === 1) {
-          console.log(`Ring crosses other ring (or possibly self) at ${x}, ${y} coming from case ${idx}`)
-          console.log(`Last few indices: ${indices.slice(Math.max(0, indices.length - 10))}`)
-          break RING
+          debug(`Ring crosses other ring (or possibly self) at ${x}, ${y} coming from case ${idx}`)
+          debug(`Last few indices: ${indices.slice(Math.max(0, indices.length - 10))}`)
+          break
         }
 
         prevx = startx
@@ -80,13 +80,15 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
           found[y * cWidth + x] = 1
         }
 
+        if (idx === 0 || idx === 15) {
+          console.log('Ran off outside of ring')
+          break
+        }
+
         // follow the loop
         // we keep track of which contour cell we're in, and we always keep the filled area to our left.
         // thus we always indicate only which direction we exit the cell.
         switch (idx) {
-          case 0:
-            console.log('Ran off outside of ring')
-            break RING
           case 1:
             x--
             break
@@ -111,7 +113,7 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
               // came from top
               x--
             } else {
-              console.log('Entered case 5 saddle point from wrong direction!')
+              debug('Entered case 5 saddle point from wrong direction!')
             }
             break
           case 6:
@@ -134,7 +136,7 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
               // came from right
               y--
             } else {
-              console.log('Entered case 10 saddle point from wrong direction.')
+              debug('Entered case 10 saddle point from wrong direction.')
             }
             break
           case 11: // b
@@ -149,9 +151,6 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
           case 14: // e
             y++
             break
-          case 15: // f
-            console.log('Ran off inside of ring')
-            break RING
         }
 
         // keep track of winding direction
@@ -205,15 +204,15 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
 
           coord = [x + frac, y]
         } else {
-          console.log(`Unexpected coordinate shift from ${startx}, ${starty} to ${x}, ${y}, discarding ring`)
-          break RING
+          debug(`Unexpected coordinate shift from ${startx}, ${starty} to ${x}, ${y}, discarding ring`)
+          break
         }
 
         coords.push(project(coord))
 
         if (coords.length > 10000) {
-          console.log('More than 10000 coordinates found in ring, skipping this ring')
-          break RING
+          debug('More than 10000 coordinates found in ring, skipping this ring')
+          break
         }
 
         // we're back at the start of the ring
@@ -234,7 +233,7 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
           // NB +y is down so the signs are reversed from what would normally be expected
           if (direction > 0) shells.push(geom)
           else holes.push(geom)
-          break RING
+          break
         }
       }
     }
@@ -242,19 +241,19 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
 
   // shell game time.
   // sort out shells and holes
-  HOLES: for (let hole of holes) {
-    for (let shell of shells) {
-      // NB this is checking whether the first coordinate of the hole is inside the shell.
-      // This is sufficient as shells don't overlap, and holes are guaranteed to be completely
-      // contained by a single shell.
-      if (inside(point(hole.geometry.coordinates[0][0]), shell)) {
-        shell.geometry.coordinates.push(hole.geometry.coordinates[0])
-        continue HOLES
-      }
-    }
+  holes.forEach((hole) => {
+    // NB this is checking whether the first coordinate of the hole is inside the shell.
+    // This is sufficient as shells don't overlap, and holes are guaranteed to be completely
+    // contained by a single shell.
+    const holePoint = point(hole.geometry.coordinates[0][0])
+    const containingShell = shells.find((shell) => inside(holePoint, shell))
 
-    console.log('Did not find fitting shell for hole')
-  }
+    if (containingShell) {
+      containingShell.coordinates.push(hole.coordinates)
+    } else {
+      console.log('Did not find fitting shell for hole')
+    }
+  })
 
   return {
     type: 'Feature',
