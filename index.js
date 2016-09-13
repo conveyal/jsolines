@@ -81,7 +81,7 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
         }
 
         if (idx === 0 || idx === 15) {
-          console.log('Ran off outside of ring')
+          debug('Ran off outside of ring')
           break
         }
 
@@ -249,9 +249,9 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
     const containingShell = shells.find((shell) => inside(holePoint, shell))
 
     if (containingShell) {
-      containingShell.coordinates.push(hole.coordinates)
+      containingShell.geometry.coordinates.push(hole.geometry.coordinates[0])
     } else {
-      console.log('Did not find fitting shell for hole')
+      debug('Did not find fitting shell for hole')
     }
   })
 
