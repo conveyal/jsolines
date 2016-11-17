@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "mastarm": "^0.10.0",
-    "semantic-release": "^4.3.5"
+    "semantic-release": "^6.3.2"
   },
   "standard": {
     "parser": "babel-eslint"
