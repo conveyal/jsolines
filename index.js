@@ -17,18 +17,18 @@ const debug = dbg('jsolines')
  */
 export default function jsolines ({surface, width, height, cutoff, project, interpolation = true}) {
   // first, create the contour grid
-  let contour = getContour({surface, width, height, cutoff})
-  let cWidth = width - 1
+  const contour = getContour({surface, width, height, cutoff})
+  const cWidth = width - 1
 
   // javascript does not have boolean arrays. lame.
-  let found = new Uint8Array((width - 1) * (height - 1))
+  const found = new Uint8Array((width - 1) * (height - 1))
 
   // DEBUG, comment out to save memory
-  let indices = []
+  const indices = []
 
   // we'll sort out what shell goes with what hole in a bit
-  let shells = []
-  let holes = []
+  const shells = []
+  const holes = []
 
   // find a cell that has a line in it, then follow that line, keeping filled area to your
   // left. This lets us use winding direction to determine holes.
@@ -56,7 +56,7 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
       // track winding direction
       let direction = 0
 
-      let coords = []
+      const coords = []
 
       while (true) {
         // make sure we're not traveling in circles
@@ -156,10 +156,10 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
         // keep track of winding direction
         direction += (x - startx) * (y + starty)
 
-        let topLeft = surface[y * width + x]
-        let topRight = surface[y * width + x + 1]
-        let botLeft = surface[(y + 1) * width + x]
-        let botRight = surface[(y + 1) * width + x + 1]
+        const topLeft = surface[y * width + x]
+        const topRight = surface[y * width + x + 1]
+        const botLeft = surface[(y + 1) * width + x]
+        const botRight = surface[(y + 1) * width + x + 1]
 
         // do linear interpolation
         let coord
@@ -220,7 +220,7 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
           coords.push(coords[0]) // close the ring
 
           // make it a fully-fledged GeoJSON object
-          let geom = {
+          const geom = {
             type: 'Feature',
             geometry: {
               type: 'Polygon',
@@ -266,7 +266,7 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
 
 /** Get a contouring grid. Exported for debug purposes, not generally used outside jsolines testing */
 export function getContour ({surface, width, height, cutoff}) {
-  let contour = new Uint8Array((width - 1) * (height - 1))
+  const contour = new Uint8Array((width - 1) * (height - 1))
 
   // compute contour values for each cell
   for (let x = 0; x < width - 1; x++) {
