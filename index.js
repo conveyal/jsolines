@@ -5,8 +5,8 @@
  * @author mattwigway
  */
 
-import inside from 'turf-inside'
-import point from 'turf-point'
+import {point} from '@turf/helpers'
+import inside from '@turf/inside'
 import dbg from 'debug'
 
 const debug = dbg('jsolines')
