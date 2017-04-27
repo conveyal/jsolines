@@ -1,3 +1,4 @@
+// @flow
 /**
  * Compute an isoline as a GeoJSON feature from a regular grid
  * Uses the Marching Squares algorithm, with code ported from
@@ -12,10 +13,25 @@ import dbg from 'debug'
 const debug = dbg('jsolines')
 
 /**
- * Create a JSON isoline. Surface is a (possibly typed) array, width and height are its width and height, and cutoff is the cutoff.
- * It is possible to disable linear interpolation for debug purposes by passing interpolation: false
+ * Create a JSON isoline. Surface is a (possibly typed) array, width and height
+ * are its width and height, and cutoff is the cutoff. It is possible to disable
+ * linear interpolation for debug purposes by passing interpolation: false
  */
-export default function jsolines ({surface, width, height, cutoff, project, interpolation = true}) {
+export default function jsolines ({
+  surface,
+  width,
+  height,
+  cutoff,
+  project,
+  interpolation = true
+}: {
+  surface: Uint8Array,
+  width: number,
+  height: number,
+  cutoff: number,
+  project: Function,
+  interpolation: boolean
+}) {
   // first, create the contour grid
   const contour = getContour({surface, width, height, cutoff})
   const cWidth = width - 1
@@ -63,7 +79,7 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
         // NB using index from _previous_ cell, we have not yet set an index for this cell
         if (found[y * cWidth + x] === 1) {
           debug(`Ring crosses other ring (or possibly self) at ${x}, ${y} coming from case ${idx}`)
-          debug(`Last few indices: ${indices.slice(Math.max(0, indices.length - 10))}`)
+          debug(`Last few indices: ${indices.slice(Math.max(0, indices.length - 10)).join(',')}`)
           break
         }
 
@@ -156,10 +172,11 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
         // keep track of winding direction
         direction += (x - startx) * (y + starty)
 
-        const topLeft = surface[y * width + x]
-        const topRight = surface[y * width + x + 1]
-        const botLeft = surface[(y + 1) * width + x]
-        const botRight = surface[(y + 1) * width + x + 1]
+        const index = y * width + x
+        const topLeft = surface[index]
+        const topRight = surface[index + 1]
+        const botLeft = surface[index + width]
+        const botRight = surface[index + width + 1]
 
         // do linear interpolation
         let coord
@@ -264,20 +281,35 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
   }
 }
 
-/** Get a contouring grid. Exported for debug purposes, not generally used outside jsolines testing */
-export function getContour ({surface, width, height, cutoff}) {
+/**
+ * Get a contouring grid. Exported for debug purposes, not generally used
+ * outside jsolines testing
+ */
+export function getContour ({
+  surface,
+  width,
+  height,
+  cutoff
+}: {
+  cutoff: number,
+  height: number,
+  width: number,
+  surface: Uint8Array
+}): Uint8Array {
   const contour = new Uint8Array((width - 1) * (height - 1))
 
   // compute contour values for each cell
   for (let x = 0; x < width - 1; x++) {
     for (let y = 0; y < height - 1; y++) {
-      let topLeft = surface[y * width + x] < cutoff
-      let topRight = surface[y * width + x + 1] < cutoff
-      let botLeft = surface[(y + 1) * width + x] < cutoff
-      let botRight = surface[(y + 1) * width + x + 1] < cutoff
+      const index = y * width + x
+      let topLeft = surface[index] < cutoff
+      let topRight = surface[index + 1] < cutoff
+      let botLeft = surface[index + width] < cutoff
+      let botRight = surface[index + width + 1] < cutoff
 
-      // if we're at the edge of the area, set the outer sides to false, so that isochrones always close
-      // even when they actually extend beyond the edges of the surface
+      // if we're at the edge of the area, set the outer sides to false, so that
+      // isochrones always close even when they actually extend beyond the edges
+      // of the surface
       if (x === 0) topLeft = botLeft = false
       if (x === width - 2) topRight = botRight = false
       if (y === 0) topLeft = topRight = false

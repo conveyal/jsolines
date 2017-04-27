@@ -3,8 +3,9 @@
   "description": "Compute isolines from regular grids in Javascript.",
   "main": "./build/index",
   "scripts": {
+    "flow": "flow",
     "prepublish": "mastarm prepublish index.js:build/index.js",
-    "test": "mastarm lint",
+    "test": "mastarm lint && mastarm test",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "repository": {
@@ -23,7 +24,8 @@
     "debug": "^2.6.1"
   },
   "devDependencies": {
-    "mastarm": "^3.4.0",
+    "flow-bin": "^0.44.2",
+    "mastarm": "^3.8.0",
     "semantic-release": "^6.3.2"
   },
   "standard": {
