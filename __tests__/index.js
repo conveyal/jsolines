@@ -2,7 +2,7 @@
 
 import fs from 'fs'
 
-import jsolines, {getContour} from '../'
+import jsolines, {getContour} from '../index.js'
 
 const surface = new Uint8Array(fs.readFileSync(`${__dirname}/surface.dat`).buffer)
 
