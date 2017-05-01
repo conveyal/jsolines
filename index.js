@@ -10,6 +10,8 @@ import {point} from '@turf/helpers'
 import inside from '@turf/inside'
 import dbg from 'debug'
 
+type Coordinate = [number, number]
+
 const debug = dbg('jsolines')
 
 /**
@@ -29,7 +31,7 @@ export default function jsolines ({
   width: number,
   height: number,
   cutoff: number,
-  project: Function,
+  project: (Coordinate) => Coordinate,
   interpolation: boolean
 }) {
   // first, create the contour grid
