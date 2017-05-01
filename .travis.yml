@@ -9,7 +9,7 @@ cache:
 before_install:
   - yarn global add codecov
 script:
-  - yarn test -- --coverage
+  - yarn test -- --coverage --coverage-paths index.js
   - codecov
 after_success:
   - yarn run semantic-release
