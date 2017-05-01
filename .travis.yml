@@ -1,18 +1,18 @@
 sudo: false
 language: node_js
-cache:
-  directories:
-    - node_modules
 notifications:
   email: false
 node_js:
   - '6'
+cache:
+  yarn: true
 before_install:
-  - npm i -g npm@^3.0.0
-before_script:
-  - npm prune
+  - yarn global add codecov
+script:
+  - yarn test -- --coverage --coverage-paths index.js
+  - codecov
 after_success:
-  - npm run semantic-release
+  - yarn run semantic-release
 branches:
   except:
     - /^v\d+\.\d+\.\d+$/

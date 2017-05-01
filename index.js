@@ -1,3 +1,4 @@
+// @flow
 /**
  * Compute an isoline as a GeoJSON feature from a regular grid
  * Uses the Marching Squares algorithm, with code ported from
@@ -5,30 +6,47 @@
  * @author mattwigway
  */
 
-import inside from 'turf-inside'
-import point from 'turf-point'
+import {point} from '@turf/helpers'
+import inside from '@turf/inside'
 import dbg from 'debug'
+
+type Coordinate = [number, number]
 
 const debug = dbg('jsolines')
 
 /**
- * Create a JSON isoline. Surface is a (possibly typed) array, width and height are its width and height, and cutoff is the cutoff.
- * It is possible to disable linear interpolation for debug purposes by passing interpolation: false
+ * Create a JSON isoline. Surface is a (possibly typed) array, width and height
+ * are its width and height, and cutoff is the cutoff. It is possible to disable
+ * linear interpolation for debug purposes by passing interpolation: false
  */
-export default function jsolines ({surface, width, height, cutoff, project, interpolation = true}) {
+export default function jsolines ({
+  surface,
+  width,
+  height,
+  cutoff,
+  project,
+  interpolation = true
+}: {
+  surface: Uint8Array,
+  width: number,
+  height: number,
+  cutoff: number,
+  project: (Coordinate) => Coordinate,
+  interpolation: boolean
+}) {
   // first, create the contour grid
-  let contour = getContour({surface, width, height, cutoff})
-  let cWidth = width - 1
+  const contour = getContour({surface, width, height, cutoff})
+  const cWidth = width - 1
 
   // javascript does not have boolean arrays. lame.
-  let found = new Uint8Array((width - 1) * (height - 1))
+  const found = new Uint8Array((width - 1) * (height - 1))
 
   // DEBUG, comment out to save memory
-  let indices = []
+  const indices = []
 
   // we'll sort out what shell goes with what hole in a bit
-  let shells = []
-  let holes = []
+  const shells = []
+  const holes = []
 
   // find a cell that has a line in it, then follow that line, keeping filled area to your
   // left. This lets us use winding direction to determine holes.
@@ -56,14 +74,14 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
       // track winding direction
       let direction = 0
 
-      let coords = []
+      const coords = []
 
       while (true) {
         // make sure we're not traveling in circles
         // NB using index from _previous_ cell, we have not yet set an index for this cell
         if (found[y * cWidth + x] === 1) {
           debug(`Ring crosses other ring (or possibly self) at ${x}, ${y} coming from case ${idx}`)
-          debug(`Last few indices: ${indices.slice(Math.max(0, indices.length - 10))}`)
+          debug(`Last few indices: ${indices.slice(Math.max(0, indices.length - 10)).join(',')}`)
           break
         }
 
@@ -156,57 +174,16 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
         // keep track of winding direction
         direction += (x - startx) * (y + starty)
 
-        let topLeft = surface[y * width + x]
-        let topRight = surface[y * width + x + 1]
-        let botLeft = surface[(y + 1) * width + x]
-        let botRight = surface[(y + 1) * width + x + 1]
-
-        // do linear interpolation
-        let coord
-        if (startx < x) {
-          // came from left
-          let frac = interpolation ? (cutoff - topLeft) / (botLeft - topLeft) : 0.5
-
-          if (frac === Infinity) {
-            debug(`segment fraction from left is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
-            frac = 0.5
-          }
-
-          coord = [x, y + frac]
-        } else if (startx > x) {
-          // came from right
-          let frac = interpolation ? (cutoff - topRight) / (botRight - topRight) : 0.5
-
-          if (frac === Infinity) {
-            debug(`segment fraction from right is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
-            frac = 0.5
-          }
-
-          coord = [x + 1, y + frac]
-        } else if (starty > y) {
-          // came from bottom
-          let frac = interpolation ? (cutoff - botLeft) / (botRight - botLeft) : 0.5
-
-          if (frac === Infinity) {
-            debug(`segment fraction from bottom is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
-            frac = 0.5
-          }
-
-          coord = [x + frac, y + 1]
-        } else if (starty < y) {
-          // came from top
-          let frac = interpolation ? (cutoff - topLeft) / (topRight - topLeft) : 0.5
-
-          if (frac === Infinity) {
-            debug(`segment fraction from top is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
-            frac = 0.5
-          }
-
-          coord = [x + frac, y]
-        } else {
-          debug(`Unexpected coordinate shift from ${startx}, ${starty} to ${x}, ${y}, discarding ring`)
-          break
-        }
+        const coord = interpolate({
+          coord: [x, y],
+          cutoff,
+          interpolation,
+          startx,
+          starty,
+          surface,
+          width
+        })
+        if (!coord) break
 
         coords.push(project(coord))
 
@@ -220,7 +197,7 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
           coords.push(coords[0]) // close the ring
 
           // make it a fully-fledged GeoJSON object
-          let geom = {
+          const geom = {
             type: 'Feature',
             geometry: {
               type: 'Polygon',
@@ -264,20 +241,105 @@ export default function jsolines ({surface, width, height, cutoff, project, inte
   }
 }
 
-/** Get a contouring grid. Exported for debug purposes, not generally used outside jsolines testing */
-export function getContour ({surface, width, height, cutoff}) {
-  let contour = new Uint8Array((width - 1) * (height - 1))
+function interpolate ({
+  coord,
+  cutoff,
+  interpolation,
+  startx,
+  starty,
+  surface,
+  width
+}: {
+  coord: Coordinate,
+  cutoff: number,
+  interpolation: boolean,
+  startx: number,
+  starty: number,
+  surface: Uint8Array,
+  width: number
+}): (Coordinate | void) {
+  const [x, y] = coord
+  const index = y * width + x
+  const topLeft = surface[index]
+  const topRight = surface[index + 1]
+  const botLeft = surface[index + width]
+  const botRight = surface[index + width + 1]
+
+  // do linear interpolation
+  if (startx < x) {
+    // came from left
+    let frac = interpolation ? (cutoff - topLeft) / (botLeft - topLeft) : 0.5
+
+    if (frac === Infinity) {
+      debug(`segment fraction from left is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      frac = 0.5
+    }
+
+    return [x, y + frac]
+  } else if (startx > x) {
+    // came from right
+    let frac = interpolation ? (cutoff - topRight) / (botRight - topRight) : 0.5
+
+    if (frac === Infinity) {
+      debug(`segment fraction from right is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      frac = 0.5
+    }
+
+    return [x + 1, y + frac]
+  } else if (starty > y) {
+    // came from bottom
+    let frac = interpolation ? (cutoff - botLeft) / (botRight - botLeft) : 0.5
+
+    if (frac === Infinity) {
+      debug(`segment fraction from bottom is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      frac = 0.5
+    }
+
+    return [x + frac, y + 1]
+  } else if (starty < y) {
+    // came from top
+    let frac = interpolation ? (cutoff - topLeft) / (topRight - topLeft) : 0.5
+
+    if (frac === Infinity) {
+      debug(`segment fraction from top is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      frac = 0.5
+    }
+
+    return [x + frac, y]
+  } else {
+    debug(`Unexpected coordinate shift from ${startx}, ${starty} to ${x}, ${y}, discarding ring`)
+  }
+}
+
+/**
+ * Get a contouring grid. Exported for debug purposes, not generally used
+ * outside jsolines testing
+ */
+export function getContour ({
+  surface,
+  width,
+  height,
+  cutoff
+}: {
+  cutoff: number,
+  height: number,
+  width: number,
+  surface: Uint8Array
+}): Uint8Array {
+  const contour = new Uint8Array((width - 1) * (height - 1))
 
   // compute contour values for each cell
   for (let x = 0; x < width - 1; x++) {
     for (let y = 0; y < height - 1; y++) {
-      let topLeft = surface[y * width + x] < cutoff
-      let topRight = surface[y * width + x + 1] < cutoff
-      let botLeft = surface[(y + 1) * width + x] < cutoff
-      let botRight = surface[(y + 1) * width + x + 1] < cutoff
+      const index = y * width + x
+      let topLeft = surface[index] < cutoff
+      let topRight = surface[index + 1] < cutoff
+      let botLeft = surface[index + width] < cutoff
+      let botRight = surface[index + width + 1] < cutoff
 
-      // if we're at the edge of the area, set the outer sides to false, so that isochrones always close
-      // even when they actually extend beyond the edges of the surface
+      // if we're at the edge of the area, set the outer sides to false, so that
+      // isochrones always close even when they actually extend beyond the edges
+      // of the surface
       if (x === 0) topLeft = botLeft = false
       if (x === width - 2) topRight = botRight = false
       if (y === 0) topLeft = topRight = false

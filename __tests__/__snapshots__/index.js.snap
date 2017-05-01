@@ -1,0 +1,149 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`jsolines get a countour 1`] = `
+Object {
+  "first": 2,
+  "last": 8,
+  "length": 83544,
+}
+`;
+
+exports[`jsolines get a jsolines feature 1`] = `
+Object {
+  "geometry": Object {
+    "coordinates": Object {
+      "first-coordinates": Object {
+        "first": Object {
+          "first": Object {
+            "first": -86.65809631,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "last": Object {
+            "first": -86.65809631,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "length": 1177,
+        },
+        "last": Object {
+          "first": Object {
+            "first": -86.65809631,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "last": Object {
+            "first": -86.65809631,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "length": 1177,
+        },
+        "length": 1,
+      },
+      "last-coordinates": Object {
+        "first": Object {
+          "first": Object {
+            "first": -86.65809631,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "last": Object {
+            "first": -86.65809631,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "length": 1177,
+        },
+        "last": Object {
+          "first": Object {
+            "first": -86.65809631,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "last": Object {
+            "first": -86.65809631,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "length": 1177,
+        },
+        "length": 1,
+      },
+      "length": 1,
+    },
+    "type": "MultiPolygon",
+  },
+  "type": "Feature",
+}
+`;
+
+exports[`jsolines get a jsolines feature without interpolation 1`] = `
+Object {
+  "geometry": Object {
+    "coordinates": Object {
+      "first-coordinates": Object {
+        "first": Object {
+          "first": Object {
+            "first": -86.65603638,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "last": Object {
+            "first": -86.65603638,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "length": 1177,
+        },
+        "last": Object {
+          "first": Object {
+            "first": -86.65603638,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "last": Object {
+            "first": -86.65603638,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "length": 1177,
+        },
+        "length": 1,
+      },
+      "last-coordinates": Object {
+        "first": Object {
+          "first": Object {
+            "first": -86.65603638,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "last": Object {
+            "first": -86.65603638,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "length": 1177,
+        },
+        "last": Object {
+          "first": Object {
+            "first": -86.65603638,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "last": Object {
+            "first": -86.65603638,
+            "last": 40.00868344,
+            "length": 2,
+          },
+          "length": 1177,
+        },
+        "length": 1,
+      },
+      "length": 1,
+    },
+    "type": "MultiPolygon",
+  },
+  "type": "Feature",
+}
+`;
