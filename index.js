@@ -174,58 +174,16 @@ export default function jsolines ({
         // keep track of winding direction
         direction += (x - startx) * (y + starty)
 
-        const index = y * width + x
-        const topLeft = surface[index]
-        const topRight = surface[index + 1]
-        const botLeft = surface[index + width]
-        const botRight = surface[index + width + 1]
-
-        // do linear interpolation
-        let coord
-        if (startx < x) {
-          // came from left
-          let frac = interpolation ? (cutoff - topLeft) / (botLeft - topLeft) : 0.5
-
-          if (frac === Infinity) {
-            debug(`segment fraction from left is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
-            frac = 0.5
-          }
-
-          coord = [x, y + frac]
-        } else if (startx > x) {
-          // came from right
-          let frac = interpolation ? (cutoff - topRight) / (botRight - topRight) : 0.5
-
-          if (frac === Infinity) {
-            debug(`segment fraction from right is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
-            frac = 0.5
-          }
-
-          coord = [x + 1, y + frac]
-        } else if (starty > y) {
-          // came from bottom
-          let frac = interpolation ? (cutoff - botLeft) / (botRight - botLeft) : 0.5
-
-          if (frac === Infinity) {
-            debug(`segment fraction from bottom is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
-            frac = 0.5
-          }
-
-          coord = [x + frac, y + 1]
-        } else if (starty < y) {
-          // came from top
-          let frac = interpolation ? (cutoff - topLeft) / (topRight - topLeft) : 0.5
-
-          if (frac === Infinity) {
-            debug(`segment fraction from top is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
-            frac = 0.5
-          }
-
-          coord = [x + frac, y]
-        } else {
-          debug(`Unexpected coordinate shift from ${startx}, ${starty} to ${x}, ${y}, discarding ring`)
-          break
-        }
+        const coord = interpolate({
+          coord: [x, y],
+          cutoff,
+          interpolation,
+          startx,
+          starty,
+          surface,
+          width
+        })
+        if (!coord) break
 
         coords.push(project(coord))
 
@@ -280,6 +238,76 @@ export default function jsolines ({
       type: 'MultiPolygon',
       coordinates: shells.map(s => s.geometry.coordinates)
     }
+  }
+}
+
+function interpolate ({
+  coord,
+  cutoff,
+  interpolation,
+  startx,
+  starty,
+  surface,
+  width
+}: {
+  coord: Coordinate,
+  cutoff: number,
+  interpolation: boolean,
+  startx: number,
+  starty: number,
+  surface: Uint8Array,
+  width: number
+}): (Coordinate | void) {
+  const [x, y] = coord
+  const index = y * width + x
+  const topLeft = surface[index]
+  const topRight = surface[index + 1]
+  const botLeft = surface[index + width]
+  const botRight = surface[index + width + 1]
+
+  // do linear interpolation
+  if (startx < x) {
+    // came from left
+    let frac = interpolation ? (cutoff - topLeft) / (botLeft - topLeft) : 0.5
+
+    if (frac === Infinity) {
+      debug(`segment fraction from left is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      frac = 0.5
+    }
+
+    return [x, y + frac]
+  } else if (startx > x) {
+    // came from right
+    let frac = interpolation ? (cutoff - topRight) / (botRight - topRight) : 0.5
+
+    if (frac === Infinity) {
+      debug(`segment fraction from right is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      frac = 0.5
+    }
+
+    return [x + 1, y + frac]
+  } else if (starty > y) {
+    // came from bottom
+    let frac = interpolation ? (cutoff - botLeft) / (botRight - botLeft) : 0.5
+
+    if (frac === Infinity) {
+      debug(`segment fraction from bottom is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      frac = 0.5
+    }
+
+    return [x + frac, y + 1]
+  } else if (starty < y) {
+    // came from top
+    let frac = interpolation ? (cutoff - topLeft) / (topRight - topLeft) : 0.5
+
+    if (frac === Infinity) {
+      debug(`segment fraction from top is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      frac = 0.5
+    }
+
+    return [x + frac, y]
+  } else {
+    debug(`Unexpected coordinate shift from ${startx}, ${starty} to ${x}, ${y}, discarding ring`)
   }
 }
 
