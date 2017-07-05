@@ -181,7 +181,8 @@ export default function jsolines ({
           startx,
           starty,
           surface,
-          width
+          width,
+          height
         })
         if (!coord) break
 
@@ -248,7 +249,8 @@ function interpolate ({
   startx,
   starty,
   surface,
-  width
+  width,
+  height
 }: {
   coord: Coordinate,
   cutoff: number,
@@ -256,14 +258,21 @@ function interpolate ({
   startx: number,
   starty: number,
   surface: Uint8Array,
-  width: number
+  width: number,
+  height: number
 }): (Coordinate | void) {
   const [x, y] = coord
   const index = y * width + x
-  const topLeft = surface[index]
-  const topRight = surface[index + 1]
-  const botLeft = surface[index + width]
-  const botRight = surface[index + width + 1]
+  let topLeft = surface[index]
+  let topRight = surface[index + 1]
+  let botLeft = surface[index + width]
+  let botRight = surface[index + width + 1]
+
+  // The edges are always considered unreachable to avoid edge effects
+  if (x === 0) topLeft = botLeft = Infinity
+  if (y === 0) topLeft = topRight = Infinity
+  if (y === height - 2) botRight = botLeft = Infinity
+  if (x === width - 2) topRight = botRight = Infinity
 
   // do linear interpolation
   if (startx < x) {
