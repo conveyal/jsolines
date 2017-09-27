@@ -279,8 +279,8 @@ function interpolate ({
     // came from left
     let frac = interpolation ? (cutoff - topLeft) / (botLeft - topLeft) : 0.5
 
-    if (frac === Infinity) {
-      debug(`segment fraction from left is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+    if (isNaN(frac) || frac === Infinity) {
+      debug(`segment fraction from left is ${frac} at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
       frac = 0.5
     }
 
@@ -289,8 +289,8 @@ function interpolate ({
     // came from right
     let frac = interpolation ? (cutoff - topRight) / (botRight - topRight) : 0.5
 
-    if (frac === Infinity) {
-      debug(`segment fraction from right is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+    if (isNaN(frac) || frac === Infinity) {
+      debug(`segment fraction from right is ${frac} at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
       frac = 0.5
     }
 
@@ -299,8 +299,8 @@ function interpolate ({
     // came from bottom
     let frac = interpolation ? (cutoff - botLeft) / (botRight - botLeft) : 0.5
 
-    if (frac === Infinity) {
-      debug(`segment fraction from bottom is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+    if (isNaN(frac) || frac === Infinity) {
+      debug(`segment fraction from bottom is ${frac} at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
       frac = 0.5
     }
 
@@ -309,8 +309,8 @@ function interpolate ({
     // came from top
     let frac = interpolation ? (cutoff - topLeft) / (topRight - topLeft) : 0.5
 
-    if (frac === Infinity) {
-      debug(`segment fraction from top is Infinity at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+    if (isNaN(frac) || frac === Infinity) {
+      debug(`segment fraction from top is ${frac} at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
       frac = 0.5
     }
 
