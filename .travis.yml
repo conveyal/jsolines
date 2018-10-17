@@ -3,9 +3,8 @@ language: node_js
 notifications:
   email: false
 node_js:
-  - '6'
-cache:
-  yarn: true
+  - '8'
+cache: yarn
 before_install:
   - yarn global add codecov
 script:
