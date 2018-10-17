@@ -3,10 +3,13 @@
   "description": "Compute isolines from regular grids in Javascript.",
   "main": "./build/index",
   "scripts": {
+    "flow": "mastarm flow",
+    "jest": "mastarm test",
+    "lint": "mastarm lint index.js __tests__/",
     "prepublish": "mastarm prepublish index.js:build/index.js",
     "pretest": "yarn",
-    "test": "mastarm lint && mastarm flow && mastarm test",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "test": "yarn run lint && yarn run flow && yarn run jest",
+    "semantic-release": "semantic-release"
   },
   "repository": {
     "type": "git",
@@ -19,13 +22,13 @@
   },
   "homepage": "https://github.com/conveyal/jsolines#readme",
   "dependencies": {
-    "@turf/helpers": "^3.10.3",
-    "@turf/inside": "^3.10.3",
-    "debug": "^2.6.1"
+    "@turf/boolean-point-in-polygon": "^6.0.1",
+    "@turf/helpers": "^6.1.4",
+    "debug": "^4.1.0"
   },
   "devDependencies": {
-    "mastarm": "^3.9.1",
-    "semantic-release": "^6.3.2"
+    "mastarm": "^4.4.1",
+    "semantic-release": "^15.9.17"
   },
   "standard": {
     "parser": "babel-eslint"

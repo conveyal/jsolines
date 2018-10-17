@@ -7,7 +7,7 @@
  */
 
 import {point} from '@turf/helpers'
-import inside from '@turf/inside'
+import inside from '@turf/boolean-point-in-polygon'
 import dbg from 'debug'
 
 type Coordinate = [number, number]
@@ -27,12 +27,12 @@ export default function jsolines ({
   project,
   interpolation = true
 }: {
-  surface: Uint8Array,
-  width: number,
-  height: number,
   cutoff: number,
+  height: number,
+  interpolation: boolean,
   project: (Coordinate) => Coordinate,
-  interpolation: boolean
+  surface: Uint8Array,
+  width: number
 }) {
   // first, create the contour grid
   const contour = getContour({surface, width, height, cutoff})
@@ -254,12 +254,12 @@ function interpolate ({
 }: {
   coord: Coordinate,
   cutoff: number,
+  height: number,
   interpolation: boolean,
   startx: number,
   starty: number,
   surface: Uint8Array,
-  width: number,
-  height: number
+  width: number
 }): (Coordinate | void) {
   const [x, y] = coord
   const index = y * width + x
@@ -332,8 +332,8 @@ export function getContour ({
 }: {
   cutoff: number,
   height: number,
-  width: number,
-  surface: Uint8Array
+  surface: Uint8Array,
+  width: number
 }): Uint8Array {
   const contour = new Uint8Array((width - 1) * (height - 1))
 
