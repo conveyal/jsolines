@@ -11,7 +11,7 @@ script:
   - yarn test -- --coverage --coverage-paths index.js
   - codecov
 after_success:
-  - yarn run semantic-release
+  - yarn run travis-deploy-once "npm run semantic-release"
 branches:
   except:
     - /^v\d+\.\d+\.\d+$/

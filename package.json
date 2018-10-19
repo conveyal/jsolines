@@ -8,8 +8,9 @@
     "lint": "mastarm lint index.js __tests__/",
     "prepublish": "mastarm prepublish index.js:build/index.js",
     "pretest": "yarn",
-    "test": "yarn run lint && yarn run flow && yarn run jest",
-    "semantic-release": "semantic-release"
+    "test": "yarn run lint && yarn run jest",
+    "semantic-release": "semantic-release",
+    "travis-deploy-once": "travis-deploy-once"
   },
   "repository": {
     "type": "git",
@@ -28,9 +29,11 @@
   },
   "devDependencies": {
     "mastarm": "^4.4.1",
-    "semantic-release": "^15.9.17"
+    "semantic-release": "^15.10.3",
+    "travis-deploy-once": "^5.0.9"
   },
   "standard": {
     "parser": "babel-eslint"
-  }
+  },
+  "version": "0.0.0-development"
 }
