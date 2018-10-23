@@ -10,8 +10,6 @@ import {point} from '@turf/helpers'
 import inside from '@turf/boolean-point-in-polygon'
 import dbg from 'debug'
 
-import type {GeoJSONFeature} from '@mapbox/geojson-types'
-
 type Coordinate = [number, number]
 
 const debug = dbg('jsolines')
@@ -35,7 +33,7 @@ export default function jsolines ({
   project: (Coordinate) => Coordinate,
   surface: Uint8Array,
   width: number
-}): GeoJSONFeature {
+}) {
   // first, create the contour grid
   const contour = getContour({surface, width, height, cutoff})
   const cWidth = width - 1
