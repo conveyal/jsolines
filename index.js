@@ -271,10 +271,11 @@ function interpolate ({
   let botRight = surface[index + width + 1]
 
   // The edges are always considered unreachable to avoid edge effects
-  if (x === 0) topLeft = botLeft = Infinity
-  if (y === 0) topLeft = topRight = Infinity
-  if (y === height - 2) botRight = botLeft = Infinity
-  if (x === width - 2) topRight = botRight = Infinity
+  // so set them to the cutoff
+  if (x === 0) topLeft = botLeft = cutoff
+  if (y === 0) topLeft = topRight = cutoff
+  if (y === height - 2) botRight = botLeft = cutoff
+  if (x === width - 2) topRight = botRight = cutoff
 
   // do linear interpolation
   if (startx < x) {
@@ -282,7 +283,7 @@ function interpolate ({
     let frac = interpolation ? (cutoff - topLeft) / (botLeft - topLeft) : 0.5
 
     if (isNaN(frac) || frac === Infinity) {
-      debug(`segment fraction from left is ${frac} at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      debug(`segment fraction from left is ${frac} at ${x}, ${y}; if this is at the edge of the query this is expected.`)
       frac = 0.5
     }
 
@@ -292,7 +293,7 @@ function interpolate ({
     let frac = interpolation ? (cutoff - topRight) / (botRight - topRight) : 0.5
 
     if (isNaN(frac) || frac === Infinity) {
-      debug(`segment fraction from right is ${frac} at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      debug(`segment fraction from right is ${frac} at ${x}, ${y}; if this is at the edge of the query this is expected.`)
       frac = 0.5
     }
 
@@ -302,7 +303,7 @@ function interpolate ({
     let frac = interpolation ? (cutoff - botLeft) / (botRight - botLeft) : 0.5
 
     if (isNaN(frac) || frac === Infinity) {
-      debug(`segment fraction from bottom is ${frac} at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      debug(`segment fraction from bottom is ${frac} at ${x}, ${y}; if this is at the edge of the query this is expected.`)
       frac = 0.5
     }
 
@@ -312,7 +313,7 @@ function interpolate ({
     let frac = interpolation ? (cutoff - topLeft) / (topRight - topLeft) : 0.5
 
     if (isNaN(frac) || frac === Infinity) {
-      debug(`segment fraction from top is ${frac} at ${x}, ${y}; if this is at the edge of the query this is not totally unexpected.`)
+      debug(`segment fraction from top is ${frac} at ${x}, ${y}; if this is at the edge of the query this is expected.`)
       frac = 0.5
     }
 
