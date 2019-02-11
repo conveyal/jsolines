@@ -102,7 +102,7 @@ export default function jsolines ({
           found[y * cWidth + x] = 1
         }
 
-        if (idx === 0 || idx === 15) {
+        if (idx === 0 || idx >= 15) {
           logError('Ran off outside of ring')
           break
         }
@@ -222,6 +222,9 @@ function followLoop ({idx, prevx, prevy, x, y}) {
     case 12: return [x + 1, y] // c
     case 13: return [x + 1, y] // d
     case 14: return [x, y + 1] // e
+    default:
+      logError(`Default case reached in followLoop for id ${idx}.`)
+      return [x, y]
   }
 }
 
